@@ -1,0 +1,36 @@
+# 使用方法 ansible-playbook -i hosts.ini stop.yml
+---
+- hosts: coordinator
+  tags:
+    - coordinator
+  tasks:
+    - name: 停止 coordinator
+      shell: pg_ctl stop -Z coordinator -D {{ deploy_dir }}/data/coordinator/
+      ignore_errors: yes
+
+
+- hosts: datanode
+  tags:
+    - datanode
+  tasks:
+    - name: 停止 datanode
+      shell: pg_ctl stop -Z datanode -D {{ deploy_dir }}/data/datanode/
+      ignore_errors: yes
+
+
+- hosts: gtm_proxy
+  tags:
+    - gtm_proxy
+  tasks:
+    - name: 停止 gtm_proxy
+      shell: gtm_ctl stop -Z gtm_proxy -D {{ deploy_dir }}/data/gtm_proxy/
+      ignore_errors: yes
+
+
+- hosts: gtm
+  tags:
+    - gtm
+  tasks:
+    - name: 停止 gtm
+      shell: gtm_ctl stop -Z gtm -D {{ deploy_dir }}/data/gtm/
+      ignore_errors: yes
