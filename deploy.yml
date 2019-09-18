@@ -1,0 +1,39 @@
+# 使用方法 ansible-playbook -i hosts.ini deploy.yml
+---
+- hosts: servers
+  tasks:
+
+    - name: 创建deploy目录
+      shell: 'mkdir -p {{ deploy_dir }}'
+
+    - name: 安装postgres-xl
+      sudo: yes
+      shell: yum install -y flex bison readline-devel zlib-devel openjade docbook-style-dsssl
+
+    - name: '上传文件'
+      # 将本地文件复制到远程服务器
+      copy:
+        src: '{{ item.src }}'
+        dest: '{{ item.dest }}'
+      with_items:
+        - { src: '{{ deploy_dir }}/postgres-xl-9.5r1.6.tar', dest: '{{ deploy_dir }}/postgres-xl-9.5r1.6.tar' }
+
+    - name: 解压
+      shell: cd {{ deploy_dir }} && tar -xf postgres-xl-9.5r1.6.tar
+
+    - name: 安装
+      sudo: yes
+      shell: cd {{ deploy_dir }}/postgres-xl-9.5r1.6 && ./configure --prefix=/home/postgres/pgxl && make && make install
+
+    - name: 添加环境变量
+      lineinfile:
+        dest:  ~/.bashrc
+        line: '{{ item.path }}'
+        regexp: '^{{ item.path }} .*'
+        state: absent
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { path: 'export PGHOME=/home/postgres/pgxl' }
+        - { path: 'export PGUSER=postgres' }
+        - { path: 'export LD_LIBRARY_PATH=$PGHOME/lib' }
+        - { path: 'export PATH=$PGHOME/bin:$PATH' }
