@@ -16,14 +16,14 @@
         src: '{{ item.src }}'
         dest: '{{ item.dest }}'
       with_items:
-        - { src: '{{ deploy_dir }}/postgres-xl-9.5r1.6.tar', dest: '{{ deploy_dir }}/postgres-xl-9.5r1.6.tar' }
+        - { src: '{{ deploy_dir }}/postgres-xl-10r1.1.tar.gz', dest: '{{ deploy_dir }}/postgres-xl-10r1.1.tar.gz' }
 
     - name: 解压
-      shell: cd {{ deploy_dir }} && tar -xf postgres-xl-9.5r1.6.tar
+      shell: cd {{ deploy_dir }} && tar -zxvf postgres-xl-10r1.1.tar.gz
 
     - name: 安装
       sudo: yes
-      shell: cd {{ deploy_dir }}/postgres-xl-9.5r1.6 && ./configure --prefix=/home/postgres/pgxl && make && make install
+      shell: cd {{ deploy_dir }}/postgres-xl-10r1.1 && ./configure --prefix=/home/postgres/pgxl && make && make install
 
     - name: 添加环境变量
       lineinfile:
