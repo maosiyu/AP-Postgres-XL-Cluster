@@ -1,0 +1,125 @@
+# 使用方法 ansible-playbook -i hosts.ini init.yml
+---
+- hosts: gtm
+  tags:
+    - gtm
+  tasks:
+    - name: 初始化 gtm
+      shell: 'mkdir -p {{ deploy_dir }}/data/gtm/ && mkdir -p {{ deploy_dir }}/logs/ && initgtm -D {{ deploy_dir }}/data/gtm/ -Z gtm'
+
+    - name: 配置 gtm
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/gtm/gtm.conf'
+        line: '{{ item.key }} = {{ item.value }}'
+        regexp: '^{{ item.key }}.*'
+        state: present
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { key: "nodename", value: "'gtm'" }
+        - { key: "listen_addresses", value: "'*'" }
+        - { key: "port", value: "6666" }
+        - { key: "startup", value: "ACT" }
+        - { key: "keepalives_idle", value: "60" }
+        - { key: "keepalives_interval", value: "10" }
+        - { key: "keepalives_count", value: "10" }
+        - { key: "log_file", value: "'{{ deploy_dir }}/logs/gtm.log'" }
+        - { key: "log_min_messages", value: "WARNING" }
+
+
+- hosts: gtm_proxy
+  tags:
+    - gtm_proxy
+  tasks:
+    - name: 初始化 gtm_proxy
+      shell: 'mkdir -p {{ deploy_dir }}/data/gtm_proxy/ && mkdir -p {{ deploy_dir }}/logs && initgtm -D {{ deploy_dir }}/data/gtm_proxy/ -Z gtm_proxy'
+
+    - name: 配置 gtm_proxy
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/gtm_proxy/gtm_proxy.conf'
+        line: '{{ item.key }} = {{ item.value }}'
+        regexp: '^{{ item.key }}.*'
+        state: present
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { key: "nodename", value: "'gtm_proxy'" }
+        - { key: "listen_addresses", value: "'*'" }
+        - { key: "port", value: "6661" }
+        - { key: "worker_threads", value: "1" }
+        - { key: "gtm_host", value: "'gtm'" }
+        - { key: "gtm_port", value: "6666" }
+        - { key: "gtm_connect_retry_interval", value: "5" }
+        - { key: "keepalives_idle", value: "60" }
+        - { key: "keepalives_interval", value: "10" }
+        - { key: "keepalives_count", value: "10" }
+        - { key: "log_file", value: "'{{ deploy_dir }}/logs/gtm_proxy.log'" }
+        - { key: "log_min_messages", value: "WARNING" }
+
+
+- hosts: datanode
+  tags:
+    - datanode
+  tasks:
+    - name: 初始化 datanode
+      shell: 'mkdir -p {{ deploy_dir }}/data/datanode/ && initdb -D {{ deploy_dir }}/data/datanode/ --nodename {{ inventory_hostname }}'
+
+    - name: 配置 datanode
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/datanode/postgresql.conf'
+        line: '{{ item.key }} = {{ item.value }}'
+        regexp: '^{{ item.key }}.*'
+        state: present
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { key: "listen_addresses", value: "'*'" }
+        - { key: "port", value: "15432" }
+        - { key: "pooler_port", value: "6668" }
+        - { key: "max_pool_size", value: "100" }
+        - { key: "pool_conn_keepalive", value: "600" }
+        - { key: "pool_maintenance_timeout", value: "30" }
+        - { key: "max_coordinators", value: "16" }
+        - { key: "max_datanodes", value: "16" }
+        - { key: "gtm_host", value: "'localhost'" }
+        - { key: "gtm_port", value: "6661" }
+        - { key: "pgxc_node_name", value: "'{{ inventory_hostname }}'" }
+
+    - name: 配置 datanode
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/datanode/pg_hba.conf'
+        line: 'host all all 0.0.0.0/0 trust'
+        regexp: 'host all all 0.0.0.0/0 trust'
+        state: present
+
+
+- hosts: coordinator
+  tags:
+    - coordinator
+  tasks:
+    - name: 初始化 coordinator
+      shell: 'mkdir -p {{ deploy_dir }}/data/coordinator/ && initdb -D {{ deploy_dir }}/data/coordinator/ --nodename {{ inventory_hostname }}'
+
+    - name: 配置 coordinator
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/coordinator/postgresql.conf'
+        line: '{{ item.key }} = {{ item.value }}'
+        regexp: '^{{ item.key }}.*'
+        state: present
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { key: "listen_addresses", value: "'*'" }
+        - { key: "port", value: "5432" }
+        - { key: "pooler_port", value: "6667" }
+        - { key: "max_pool_size", value: "100" }
+        - { key: "pool_conn_keepalive", value: "600" }
+        - { key: "pool_maintenance_timeout", value: "30" }
+        - { key: "max_coordinators", value: "16" }
+        - { key: "max_datanodes", value: "16" }
+        - { key: "gtm_host", value: "'localhost'" }
+        - { key: "gtm_port", value: "6661" }
+        - { key: "pgxc_node_name", value: "'{{ inventory_hostname }}'" }
+
+    - name: 配置 coordinator
+      lineinfile:
+        dest: '{{ deploy_dir }}/data/coordinator/pg_hba.conf'
+        line: 'host all all 0.0.0.0/0 trust'
+        regexp: 'host all all 0.0.0.0/0 trust'
+        state: present
