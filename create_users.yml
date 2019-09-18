@@ -1,0 +1,31 @@
+# 使用方法 ansible-playbook -i hosts.ini create_users.yml -u root -k
+---
+- hosts: all
+
+  tasks:
+    - name: create user
+      user: name={{ username }} shell=/bin/bash createhome=yes
+
+    - name: set authorized key
+      authorized_key:
+        user: "{{ username }}"
+        key: "{{ lookup('file', '/home/{{ username }}/.ssh/id_rsa.pub') }}"
+        state: present
+
+    - name: update sudoers file
+      lineinfile:
+        # 必须参数，指定要操作的文件。
+        dest: /etc/sudoers
+        # 使用此参数指定文本内容。
+        line: '{{ username }} ALL=(ALL) NOPASSWD: ALL'
+        # 借助insertafter参数可以将文本插入到“指定的行”之后，
+        # insertafter参数的值可以设置为EOF或者正则表达式，EOF为End Of File之意，
+        # 表示插入到文档的末尾，默认情况下insertafter的值为EOF，
+        # 如果将insertafter的值设置为正则表达式，表示将文本插入到匹配到正则的行之后，
+        # 如果正则没有匹配到任何行，则插入到文件末尾，当使用backrefs参数时，此参数会被忽略。
+        insertafter: EOF
+        # 使用正则表达式匹配对应的行，当替换文本时，如果有多行文本都能被匹配，则只有最后面被匹配到的那行文本才会被替换，
+        # 当删除文本时，如果有多行文本都能被匹配，这么这些行都会被删除。
+        regexp: '^{{ username }} .*'
+        # 当想要删除对应的文本时，需要将state参数的值设置为absent，absent为缺席之意，表示删除，state的默认值为present。
+        state: present
