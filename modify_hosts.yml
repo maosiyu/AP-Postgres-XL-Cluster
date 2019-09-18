@@ -1,0 +1,16 @@
+# 使用方法 ansible-playbook -i hosts.ini modify_hosts.yml
+---
+- hosts: servers
+  tasks:
+    - name: 配置 hosts 映射
+      sudo: yes
+      lineinfile:
+        dest: '/etc/hosts'
+        line: '{{ item.key }} {{ item.value }}'
+        regexp: '{{ item.key }} {{ item.value }}'
+        state: present
+      # 定义集合，并循环执行所在的模块
+      with_items:
+        - { key: "192.168.181.18", value: "gtm" }
+        - { key: "192.168.180.47", value: "node1" }
+        - { key: "192.168.180.48", value: "node2" }
