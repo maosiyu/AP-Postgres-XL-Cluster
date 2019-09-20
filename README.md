@@ -13,7 +13,7 @@
 ``` ruby
 [root@test1]~# useradd -m -d /home/postgres postgres
 [root@test1]~# passwd postgres
-pwd@123456
+Qwe@1245
 [root@test1]~#
 # 追加 sudo 免密
 [root@test1]~# cat >> /etc/sudoers << eric
@@ -297,6 +297,7 @@ eric
 
 [postgres@test1 deploy]$
 ```
+`ansible-playbook -i hosts.ini deploy.yml`
 
 ###### 4.3 初始化
 ``` ruby
@@ -430,6 +431,7 @@ eric
 
 [postgres@test1 deploy]$
 ```
+`ansible-playbook -i hosts.ini init.yml`
 
 ###### 4.4 启动
 ``` ruby
@@ -471,8 +473,9 @@ eric
 
 [postgres@test1 deploy]$
 ```
+`ansible-playbook -i hosts.ini start.yml`
 
-###### 4.5停止
+###### 4.5 停止
 ``` ruby
 [postgres@test1 deploy]$ cat > /home/postgres/deploy/stop.yml << eric
 # 使用方法 ansible-playbook -i hosts.ini stop.yml
@@ -515,8 +518,9 @@ eric
 
 [postgres@test1 deploy]$
 ```
+`ansible-playbook -i hosts.ini stop.yml`
 
-###### 4.6清除
+###### 4.6 清除
 ``` ruby
 [postgres@test1 deploy]$ cat > /home/postgres/deploy/cleanup_data.yml << eric
 # 使用方法 ansible-playbook -i hosts.ini cleanup_data.yml
@@ -559,10 +563,11 @@ eric
 
 [postgres@test1 deploy]$
 ```
+`ansible-playbook -i hosts.ini cleanup_data.yml`
 
 ###### 4.7 执行注册
+**4.7.1 node1 上执行**
 ``` ruby
-# node1 上执行
 psql -p 15432 -c "CREATE NODE datanode2 WITH (TYPE='datanode',HOST='node2',PORT=15432)"
 psql -p 15432 -c "CREATE NODE coordinator1 WITH (TYPE='coordinator',HOST='node1',PORT=5432)"
 psql -p 15432 -c "CREATE NODE coordinator2 WITH (TYPE='coordinator',HOST='node2',PORT=5432)"
@@ -575,8 +580,8 @@ psql -p 5432 -c "CREATE NODE datanode2 WITH (TYPE='datanode',HOST='node2',PORT=1
 psql -p 5432 -c "select pgxc_pool_reload()" # 重新加载
 psql -p 5432 -c "select * from pgxc_node" # 查看结果
 ```
+**4.7.2 node2 上执行**
 ``` ruby
-# node2 上执行
 psql -p 15432 -c "CREATE NODE datanode1 WITH (TYPE='datanode',HOST='node1',PORT=15432)"
 psql -p 15432 -c "CREATE NODE coordinator1 WITH (TYPE='coordinator',HOST='node1',PORT=5432)"
 psql -p 15432 -c "CREATE NODE coordinator2 WITH (TYPE='coordinator',HOST='node2',PORT=5432)"
